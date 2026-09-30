@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.6 Deviation from Ideal Gas Law — Lava Lab Science</title>
+<style>
+  :root{
+    --teal:#2dd4bf; --teal-dim:#14b8a6;
+    --violet:#a78bfa; --violet-dim:#8b5cf6;
+    --amber:#fbbf24; --amber-dim:#f59e0b;
+    --bg:#0c0e14; --panel:#151824; --panel2:#1b1f2e; --panel3:#232739;
+    --text:#e7e9f0; --muted:#9aa1b4; --border:#2a3044;
+    --good:#34d399; --bad:#f87171;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(45,212,191,.10), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(167,139,250,.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    min-height:100vh;
+    padding:14px;
+  }
+  .app{max-width:1180px;margin:0 auto;}
+  .wordmark{
+    font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.16em;
+    background:linear-gradient(90deg, var(--teal), var(--violet) 55%, var(--amber));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin:0 0 6px 4px;
+  }
+  header.tool-header{
+    background:linear-gradient(135deg, var(--panel), var(--panel2));
+    border:1px solid var(--border); border-radius:14px;
+    padding:16px 20px; margin-bottom:14px;
+  }
+  header.tool-header h1{margin:0 0 4px 0; font-size:clamp(19px,2.6vw,26px); font-weight:800; letter-spacing:.01em;}
+  header.tool-header h1 .num{
+    background:linear-gradient(90deg,var(--teal),var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  header.tool-header p{margin:0; color:var(--muted); font-size:13.5px;}
+  .eqn-banner{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-top:10px; padding:8px 12px; border-radius:10px;
+    background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.28);
+    font-size:13px; color:var(--muted);
+  }
+  .eqn-banner b{color:var(--violet); font-size:14px;}
+
+  nav.modes{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  nav.modes button{
+    flex:1 1 140px; padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+    background:var(--panel); color:var(--muted); font-size:14px; font-weight:700; cursor:pointer;
+    transition:.15s;
+  }
+  nav.modes button.active{
+    background:linear-gradient(135deg, rgba(45,212,191,.18), rgba(167,139,250,.14));
+    border-color:var(--teal); color:var(--text);
+  }
+  nav.modes button:hover{color:var(--text);}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px;}
+  .subtabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .subtabs button{
+    padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:var(--panel2);
+    color:var(--muted); font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  .subtabs button.active{background:var(--violet); border-color:var(--violet); color:#0c0e14;}
+
+  .grid2{display:grid; grid-template-columns:1.05fr .95fr; gap:16px;}
+  @media (max-width:820px){ .grid2{grid-template-columns:1fr;} }
+
+  .controls{display:flex; flex-direction:column; gap:14px;}
+  .ctrl{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:10px 12px;}
+  .ctrl label{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  .ctrl label span.val{color:var(--text); font-weight:800;}
+  input[type=range]{width:100%; -webkit-appearance:none; height:6px; border-radius:4px; background:var(--panel3); outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--teal); cursor:pointer; border:2px solid #0c0e14;}
+  input[type=range].v-slider::-webkit-slider-thumb{background:var(--violet);}
+  input[type=range].a-slider::-webkit-slider-thumb{background:var(--amber);}
+  select{
+    width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+    background:var(--panel3); color:var(--text); font-size:13px; font-weight:700;
+  }
+
+  canvas{display:block; width:100%; background:#080a10; border:1px solid var(--border); border-radius:10px;}
+  .twobox{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:560px){ .twobox{grid-template-columns:1fr;} }
+  .box-label{text-align:center; font-size:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; margin-bottom:4px;}
+  .box-label.ideal{color:var(--teal);}
+  .box-label.real{color:var(--amber);}
+
+  .gas-legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:12px; color:var(--muted);}
+  .gas-legend .chip{padding:4px 9px; border-radius:999px; border:1px solid var(--border); background:var(--panel2);}
+
+  svg text{fill:var(--muted); font-size:10px;}
+  .curve{fill:none; stroke-width:2.5;}
+  .axis{stroke:var(--border); stroke-width:1;}
+  .grid-line{stroke:#20243380; stroke-width:1;}
+  .ideal-line{stroke:#5b6478; stroke-width:1.5; stroke-dasharray:5,4;}
+  .condense-zone{fill:rgba(248,113,113,0.10);}
+  .pt{stroke:#0c0e14; stroke-width:2;}
+
+  .relation-box{margin-top:12px; padding:12px 14px; border-radius:10px; background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.3); font-size:13.5px; line-height:1.55;}
+  .relation-box .tag{display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:999px; margin-bottom:6px;}
+  .tag.attract{background:rgba(96,165,250,.18); color:#93c5fd;}
+  .tag.volume{background:rgba(251,191,36,.18); color:#fde68a;}
+  .tag.condense{background:rgba(248,113,113,.18); color:#fca5a5;}
+
+  h2.section-title{font-size:15px; margin:0 0 12px 0; color:var(--text); font-weight:800;}
+  h3.mini-title{font-size:13px; margin:0 0 8px 0; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+
+  .extremes-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:640px){ .extremes-grid{grid-template-columns:1fr;} }
+  .extreme-card{border-radius:12px; padding:14px 16px; border:1px solid var(--border); font-size:13px; line-height:1.55; color:var(--muted);}
+  .extreme-card p{margin:0;}
+  .ideal-card{background:rgba(45,212,191,.06); border-color:rgba(45,212,191,.3);}
+  .real-card{background:rgba(251,191,36,.06); border-color:rgba(251,191,36,.3);}
+  .extreme-head{margin-bottom:6px;}
+  .extreme-tag{display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:999px;}
+  .ideal-tag{background:rgba(45,212,191,.18); color:var(--teal);}
+  .real-tag{background:rgba(251,191,36,.18); color:var(--amber);}
+  .extreme-cond{font-size:14.5px; font-weight:800; color:var(--text); margin-bottom:6px;}
+
+  .step-nav{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .step-dots{display:flex; gap:6px;}
+  .step-dots span{width:9px; height:9px; border-radius:50%; background:var(--panel3); border:1px solid var(--border);}
+  .step-dots span.done{background:var(--good); border-color:var(--good);}
+  .step-dots span.cur{background:var(--amber); border-color:var(--amber);}
+  .navbtn{padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--panel2); color:var(--text); font-weight:700; cursor:pointer; font-size:13px;}
+  .navbtn:disabled{opacity:.35; cursor:default;}
+  .navbtn.primary{background:linear-gradient(135deg,var(--teal),var(--violet)); border:none; color:#0c0e14;}
+  .predict-opts{display:flex; flex-direction:column; gap:8px; margin:12px 0;}
+  .opt-btn{text-align:left; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--panel2); color:var(--text); cursor:pointer; font-size:13.5px;}
+  .opt-btn:hover{border-color:var(--teal);}
+  .opt-btn.correct{background:rgba(52,211,153,.16); border-color:var(--good);}
+  .opt-btn.incorrect{background:rgba(248,113,113,.16); border-color:var(--bad);}
+  .opt-btn:disabled{cursor:default;}
+  .feedback-box{margin-top:10px; padding:12px 14px; border-radius:10px; font-size:13.5px; line-height:1.55;}
+  .feedback-box.correct{background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.4);}
+  .feedback-box.incorrect{background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.4);}
+
+  .tier-row{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .tier-btn{flex:1 1 140px; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--panel2); cursor:pointer; text-align:left;}
+  .tier-btn.active{border-color:var(--amber); background:rgba(251,191,36,.1);}
+  .tier-btn .t-name{font-weight:800; font-size:14px;}
+  .tier-btn .t-desc{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .qcounter{font-size:12px; color:var(--muted); margin-bottom:8px;}
+  .qtext{font-size:15px; font-weight:700; margin-bottom:14px; line-height:1.5;}
+  .score-summary{text-align:center; padding:30px 16px;}
+  .score-summary .big{font-size:42px; font-weight:900; background:linear-gradient(90deg,var(--teal),var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+
+  footer{text-align:center; color:var(--muted); font-size:11px; padding:16px 0 6px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wordmark">LAVA LAB SCIENCE</div>
+  <header class="tool-header">
+    <h1><span class="num">3.6</span> Deviation from Ideal Gas Law</h1>
+    <p>Why real gases don't perfectly obey PV = nRT — and when the difference matters most.</p>
+    <div class="eqn-banner">The ideal gas law assumes gas particles have <b>zero volume</b> and <b>no attraction</b> to each other. Real gases deviate from this model because of <b>interparticle attractions</b> (especially near condensation) and <b>particle volume</b> (especially at very high pressure).</div>
+  </header>
+
+  <nav class="modes">
+    <button data-mode="explore" class="active">🔍 Explore</button>
+    <button data-mode="guided">🧪 Guided Lab</button>
+    <button data-mode="quiz">📝 Quiz</button>
+  </nav>
+
+  <!-- EXPLORE -->
+  <div id="mode-explore">
+    <div class="subtabs">
+      <button data-sub="particles" class="active">Ideal vs. Real Particles</button>
+      <button data-sub="zfactor">Compressibility (Z) Graph</button>
+    </div>
+
+    <!-- Particle comparison -->
+    <div id="sub-particles" class="panel">
+      <h2 class="section-title">Same conditions, two models</h2>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:-6px;">Both boxes hold the same number of particles at the same temperature and container size. The left box uses the <b>ideal gas model</b> (point particles, no forces between them). The right box adds two real effects: particles have actual <b>size</b>, and nearby particles <b>attract</b> each other.</p>
+      <div class="twobox">
+        <div><div class="box-label ideal">Ideal Gas Model</div><canvas id="idealCanvas" width="330" height="260"></canvas></div>
+        <div><div class="box-label real">Real Gas (same conditions)</div><canvas id="realCanvas" width="330" height="260"></canvas></div>
+      </div>
+      <div class="grid2" style="margin-top:14px;">
+        <div class="controls">
+          <div class="ctrl">
+            <label>Which gas? <span class="val" id="pGas_val"></span></label>
+            <select id="pGasSelect"></select>
+          </div>
+          <div class="ctrl">
+            <label>Temperature, T <span class="val" id="pT_val"></span></label>
+            <input type="range" class="a-slider" id="pT" min="80" max="500" step="10" value="200">
+          </div>
+          <div class="ctrl">
+            <label>Density (crowding) = changing n, moles <span class="val" id="pD_val"></span></label>
+            <input type="range" class="v-slider" id="pD" min="20" max="95" step="1" value="55">
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin:0;">Try it: set Temperature high and Density low — the real-gas box should look almost identical to the ideal-gas box. Then reverse both and watch the real-gas particles start to clump.</p>
+        </div>
+        <div class="relation-box" id="particleRelationBox"></div>
+      </div>
+
+      <h3 class="mini-title" style="margin-top:18px;">When does a real gas behave most (and least) like an ideal gas?</h3>
+      <div class="extremes-grid">
+        <div class="extreme-card ideal-card">
+          <div class="extreme-head"><span class="extreme-tag ideal-tag">Closest to ideal</span></div>
+          <div class="extreme-cond">Low pressure &nbsp;+&nbsp; High temperature</div>
+          <p>Particles are spread far apart, so the container is huge compared to the tiny space they actually occupy — particle volume barely matters. High speed means particles zip past each other before attraction has time to act, and they hit the walls hard enough that any weak attractive tug barely registers. Both real-gas effects shrink toward zero.</p>
+        </div>
+        <div class="extreme-card real-card">
+          <div class="extreme-head"><span class="extreme-tag real-tag">Farthest from ideal</span></div>
+          <div class="extreme-cond">High pressure &nbsp;+&nbsp; Low temperature</div>
+          <p>At high pressure the container shrinks until the particles' own volume becomes a real fraction of the total — the "particle volume" effect. At low temperature, particles move slowly and linger near each other, giving interparticle attraction time to actually pull them off course. Push both far enough together and the gas approaches <b>condensation</b>, where the ideal gas model stops making sense at all.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Z factor graph -->
+    <div id="sub-zfactor" class="panel" style="display:none;">
+      <h2 class="section-title">Compressibility factor, Z = PV / nRT</h2>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:-6px;">For an ideal gas, Z = 1 at every pressure — the dashed line. Real gases drift away from Z = 1. These curves are <b>qualitative</b> (shaped to show the correct trends), not lab-measured data.</p>
+      <div class="grid2">
+        <div>
+          <svg id="zSvg" viewBox="0 0 440 320" style="width:100%; background:#080a10; border:1px solid var(--border); border-radius:10px;"></svg>
+        </div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>Gas <span class="val" id="zGas_val"></span></label>
+            <select id="zGasSelect"></select>
+          </div>
+          <div class="ctrl">
+            <label>Temperature, T <span class="val" id="zT_val"></span></label>
+            <input type="range" class="a-slider" id="zT" min="150" max="500" step="10" value="300">
+          </div>
+          <div class="relation-box" id="zRelationBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUIDED LAB -->
+  <div id="mode-guided" class="panel" style="display:none;">
+    <div class="step-nav">
+      <h2 class="section-title" style="margin:0;" id="stepTitle"></h2>
+      <div class="step-dots" id="stepDots"></div>
+    </div>
+    <div id="stepBody"></div>
+    <div class="step-nav" style="margin-top:16px;">
+      <button class="navbtn" id="stepBack">← Back</button>
+      <span style="font-size:12px;color:var(--muted);" id="stepScore"></span>
+      <button class="navbtn primary" id="stepNext">Next →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="mode-quiz" class="panel" style="display:none;">
+    <div id="quizTierSelect">
+      <h2 class="section-title">Choose a tier</h2>
+      <div class="tier-row" id="tierRow"></div>
+    </div>
+    <div id="quizArea" style="display:none;"></div>
+  </div>
+
+  <footer>Lava Lab Science · AP Chemistry CED Topic 3.6 · Explore → Guided Lab → Quiz · works fully offline</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+function fmt(x,d){ if(x===undefined||x===null||isNaN(x)) return "—"; return (+x).toFixed(d===undefined?2:d); }
+
+/* Gas parameter table: qualitative attraction (a) and size (b) coefficients — illustrative only, not real van der Waals constants. */
+const GASES = [
+  { key:'He',  label:'He (helium)',   a:0.00030, b:0.0000030, desc:'Very small, extremely weak London dispersion forces — the closest thing to an ideal gas.' },
+  { key:'H2',  label:'H₂ (hydrogen)', a:0.00038, b:0.0000034, desc:'Very small, extremely weak London dispersion forces — nearly ideal.' },
+  { key:'N2',  label:'N₂ (nitrogen)', a:0.0011,  b:0.0000058, desc:'Small nonpolar molecule; modest dispersion forces.' },
+  { key:'O2',  label:'O₂ (oxygen)',   a:0.0013,  b:0.0000062, desc:'Similar to N₂, slightly more polarizable.' },
+  { key:'CH4', label:'CH₄ (methane)', a:0.0019,  b:0.0000070, desc:'Larger nonpolar molecule with stronger dispersion forces.' },
+  { key:'CO2', label:'CO₂ (carbon dioxide)', a:0.0032, b:0.0000082, desc:'Larger molecule, significant dispersion forces — deviates noticeably as conditions approach condensation.' },
+  { key:'NH3', label:'NH₃ (ammonia)', a:0.0042, b:0.0000078, desc:'Strong hydrogen bonding creates large interparticle attractions — the most non-ideal gas in this set.' }
+];
+/* Drawn particle radius is derived directly from the gas's own "b" (particle-volume) coefficient —
+   the same term used in the Z-factor formula below — so a bigger b always draws a visibly bigger particle. */
+function gasRadius(g){ return 2.4 + g.b*250000; }
+function gasByKey(k){ return GASES.find(g=>g.key===k); }
+function Zfactor(g,P,T){ return 1 - g.a*Math.sqrt(300/T)*P + g.b*P*P; }
+
+/* ---------------- MODE / SUBTAB SWITCHING ---------------- */
+const modeButtons = document.querySelectorAll('nav.modes button');
+const modePanels = { explore: document.getElementById('mode-explore'), guided: document.getElementById('mode-guided'), quiz: document.getElementById('mode-quiz') };
+modeButtons.forEach(b=>b.addEventListener('click', ()=>{
+  modeButtons.forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  Object.keys(modePanels).forEach(k=> modePanels[k].style.display = (k===b.dataset.mode)?'':'none');
+}));
+const subButtons = document.querySelectorAll('.subtabs button');
+const subPanels = { particles: document.getElementById('sub-particles'), zfactor: document.getElementById('sub-zfactor') };
+subButtons.forEach(b=>b.addEventListener('click', ()=>{
+  subButtons.forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  Object.keys(subPanels).forEach(k=> subPanels[k].style.display = (k===b.dataset.sub)?'':'none');
+}));
+
+/* ================= IDEAL VS REAL PARTICLE VIEW ================= */
+(function(){
+  const idealCv = document.getElementById('idealCanvas'), idealCtx = idealCv.getContext('2d');
+  const realCv = document.getElementById('realCanvas'), realCtx = realCv.getContext('2d');
+  const gasSelect = document.getElementById('pGasSelect');
+  const gasValEl = document.getElementById('pGas_val');
+  const tSlider = document.getElementById('pT'), tVal = document.getElementById('pT_val');
+  const dSlider = document.getElementById('pD'), dVal = document.getElementById('pD_val');
+  const relBox = document.getElementById('particleRelationBox');
+
+  GASES.forEach(g=>{ const o=document.createElement('option'); o.value=g.key; o.textContent=g.label; gasSelect.appendChild(o); });
+  gasSelect.value = 'NH3';
+
+  const W=330,H=260, PAD=14;
+  let idealP=[], realP=[];
+
+  function countFromDensity(d){ return Math.round(14 + d*0.55); }
+
+  function seed(){
+    idealP=[]; realP=[];
+    const n = countFromDensity(+dSlider.value);
+    const T = +tSlider.value;
+    for(let i=0;i<n;i++){
+      const ang=Math.random()*Math.PI*2;
+      const spd=Math.sqrt(T/200)*1.4*(0.6+Math.random()*0.8);
+      idealP.push({x:PAD+Math.random()*(W-2*PAD), y:PAD+Math.random()*(H-2*PAD), vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd});
+      realP.push({x:PAD+Math.random()*(W-2*PAD), y:PAD+Math.random()*(H-2*PAD), vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd});
+    }
+  }
+
+  function stepIdeal(){
+    idealP.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<PAD+2){p.x=PAD+2;p.vx*=-1;} if(p.x>W-PAD-2){p.x=W-PAD-2;p.vx*=-1;}
+      if(p.y<PAD+2){p.y=PAD+2;p.vy*=-1;} if(p.y>H-PAD-2){p.y=H-PAD-2;p.vy*=-1;}
+    });
+  }
+
+  function stepReal(){
+    const g = gasByKey(gasSelect.value);
+    const r = gasRadius(g);
+    const attract = g.a*3200; // visual pull strength
+    for(let i=0;i<realP.length;i++){
+      const p = realP[i];
+      for(let j=i+1;j<realP.length;j++){
+        const q = realP[j];
+        const dx=q.x-p.x, dy=q.y-p.y;
+        const dist = Math.sqrt(dx*dx+dy*dy)||0.001;
+        if(dist < r*2){ // hard collision - particle volume effect
+          const overlap = (r*2-dist)/2;
+          const nx=dx/dist, ny=dy/dist;
+          p.x-=nx*overlap; p.y-=ny*overlap; q.x+=nx*overlap; q.y+=ny*overlap;
+          const tmp1x=p.vx,tmp1y=p.vy; p.vx=q.vx; p.vy=q.vy; q.vx=tmp1x; q.vy=tmp1y;
+        } else if(dist < r*7){ // weak attraction zone
+          const pull = attract/(dist*dist)*0.4;
+          const nx=dx/dist, ny=dy/dist;
+          p.vx+=nx*pull; p.vy+=ny*pull; q.vx-=nx*pull; q.vy-=ny*pull;
+        }
+      }
+    }
+    realP.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<PAD+r){p.x=PAD+r;p.vx*=-1;} if(p.x>W-PAD-r){p.x=W-PAD-r;p.vx*=-1;}
+      if(p.y<PAD+r){p.y=PAD+r;p.vy*=-1;} if(p.y>H-PAD-r){p.y=H-PAD-r;p.vy*=-1;}
+      p.vx*=0.995; p.vy*=0.995; // slight damping so attraction can visibly cluster particles
+    });
+  }
+
+  function draw(ctx,pts,color,r){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#2a3044'; ctx.lineWidth=1.5; ctx.strokeRect(PAD/2,PAD/2,W-PAD,H-PAD);
+    ctx.fillStyle=color;
+    pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill(); });
+  }
+
+  function updateLabels(){
+    const g = gasByKey(gasSelect.value);
+    gasValEl.textContent = g.key;
+    tVal.textContent = tSlider.value+' K';
+    dVal.textContent = dSlider.value+'%';
+    const T = +tSlider.value;
+    const lowT = T < 220, highD = +dSlider.value > 70;
+    let tag='attract', tagText='Attraction dominates';
+    let msg = 'At '+g.key+', '+T+' K: ';
+    if(lowT && highD){
+      tag='condense'; tagText='Approaching condensation';
+      msg += 'low temperature AND high crowding together — this is exactly where real-gas behavior is most extreme. Slow-moving, closely-packed '+g.key+' particles spend enough time near each other for attractive forces to noticeably pull them together, visible as clumping in the real-gas box.';
+    } else if(lowT){
+      tag='attract'; tagText='Attraction dominates';
+      msg += 'particles are moving slowly. They stay near each other longer, so interparticle attraction has time to act — watch for '+g.key+' particles briefly sticking together in the real-gas box. '+g.desc;
+    } else if(highD){
+      tag='volume'; tagText='Particle volume dominates';
+      msg += 'the box is crowded. Even though the particles are moving fast, their actual size now takes up a meaningful fraction of the container — the real-gas particles collide with each other far more than the (invisibly small) ideal points do.';
+    } else {
+      tag='attract'; tagText='Close to ideal';
+      msg += 'moderate temperature and low crowding — both real-gas effects are small here, so the real box should look almost identical to the ideal box.';
+    }
+    relBox.innerHTML = '<span class="tag '+tag+'">'+tagText+'</span><br>'+msg;
+  }
+
+  gasSelect.addEventListener('change', ()=>{ updateLabels(); });
+  tSlider.addEventListener('input', ()=>{ seed(); updateLabels(); });
+  dSlider.addEventListener('input', ()=>{ seed(); updateLabels(); });
+
+  seed(); updateLabels();
+  function loop(){ stepIdeal(); stepReal(); draw(idealCtx, idealP, 'rgba(45,212,191,0.9)', 3); draw(realCtx, realP, 'rgba(251,191,36,0.9)', gasRadius(gasByKey(gasSelect.value))); requestAnimationFrame(loop); }
+  loop();
+})();
+
+/* ================= Z FACTOR GRAPH ================= */
+(function(){
+  const gasSelect = document.getElementById('zGasSelect');
+  const gasValEl = document.getElementById('zGas_val');
+  const tSlider = document.getElementById('zT'), tVal = document.getElementById('zT_val');
+  const relBox = document.getElementById('zRelationBox');
+  const svg = document.getElementById('zSvg');
+  GASES.forEach(g=>{ const o=document.createElement('option'); o.value=g.key; o.textContent=g.label; gasSelect.appendChild(o); });
+  gasSelect.value='CO2';
+
+  const PMAX = 350;
+  function render(){
+    const g = gasByKey(gasSelect.value);
+    const T = +tSlider.value;
+    gasValEl.textContent = g.key; tVal.textContent = T+' K';
+
+    const W=440,H=320, ML=52,MR=16,MT=16,MB=40;
+    const plotW=W-ML-MR, plotH=H-MT-MB;
+    const ymin=0, ymax=1.8;
+    function sx(P){ return ML + P/PMAX*plotW; }
+    function sy(Z){ const zc=Math.max(ymin,Math.min(ymax,Z)); return MT+plotH-(zc-ymin)/(ymax-ymin)*plotH; }
+
+    const pts=[]; let condenseUntil=0;
+    for(let P=0;P<=PMAX;P+=2){
+      let Z = Zfactor(g,P,T);
+      if(Z < 0.15){ condenseUntil = P; Z = Math.max(0.05, Z); }
+      pts.push([P, Z]);
+    }
+
+    let s='';
+    for(let i=0;i<=4;i++){
+      const gx=ML+plotW*i/4, gy=MT+plotH*i/4;
+      s+='<line class="grid-line" x1="'+gx+'" y1="'+MT+'" x2="'+gx+'" y2="'+(MT+plotH)+'"/>';
+      s+='<line class="grid-line" x1="'+ML+'" y1="'+gy+'" x2="'+(ML+plotW)+'" y2="'+gy+'"/>';
+      s+='<text x="'+gx+'" y="'+(MT+plotH+14)+'" text-anchor="middle">'+Math.round(PMAX*i/4)+'</text>';
+      s+='<text x="'+(ML-8)+'" y="'+(MT+plotH-plotH*i/4+3)+'" text-anchor="end">'+(ymax-ymax*i/4).toFixed(1)+'</text>';
+    }
+    if(condenseUntil>0){
+      s+='<rect class="condense-zone" x="'+ML+'" y="'+MT+'" width="'+(sx(condenseUntil)-ML)+'" height="'+plotH+'"/>';
+    }
+    s+='<line class="axis" x1="'+ML+'" y1="'+MT+'" x2="'+ML+'" y2="'+(MT+plotH)+'"/>';
+    s+='<line class="axis" x1="'+ML+'" y1="'+(MT+plotH)+'" x2="'+(ML+plotW)+'" y2="'+(MT+plotH)+'"/>';
+    s+='<line class="ideal-line" x1="'+ML+'" y1="'+sy(1)+'" x2="'+(ML+plotW)+'" y2="'+sy(1)+'"/>';
+    s+='<text x="'+(ML+6)+'" y="'+(sy(1)-5)+'" style="fill:#8892a6;">ideal gas, Z = 1</text>';
+    s+='<text x="'+(ML+plotW/2)+'" y="'+(H-6)+'" text-anchor="middle" style="fill:#9aa1b4;">Pressure, P (atm)</text>';
+    s+='<text x="12" y="'+(MT+8)+'" style="fill:#9aa1b4;">Z = PV/nRT</text>';
+
+    let path='M '+pts.map(([P,Z])=> sx(P)+' '+sy(Z)).join(' L ');
+    s+='<path class="curve" d="'+path+'" style="stroke:'+ (T<220?'#60a5fa':'#fbbf24') +'"/>';
+
+    svg.innerHTML = s;
+
+    let tag='attract', tagText='Z < 1: attraction dominates';
+    let msg;
+    const Zmid = Zfactor(g,150,T);
+    const Zhigh = Zfactor(g,PMAX,T);
+    if(condenseUntil>0){
+      tag='condense'; tagText='Approaching condensation';
+      msg = 'At '+T+' K, '+g.key+'\'s curve plunges toward Z = 0 at moderate pressure — physically, this means the gas is condensing into a liquid. The simple deviation model (and the ideal gas law itself) stops making sense in the shaded zone, because the substance is no longer really behaving as a gas.';
+    } else if(Zhigh>1 && Zmid<1){
+      tag='volume'; tagText='Both effects visible';
+      msg = 'At '+T+' K, '+g.key+' first dips below Z = 1 at moderate pressure (interparticle attraction pulls particles inward, so measured pressure is slightly lower than the ideal law predicts) — then rises above Z = 1 at high pressure, where the particles\' own volume leaves less empty space than the ideal model assumes, pushing measured pressure above the prediction.';
+    } else if(Zhigh<=1){
+      tag='attract'; tagText='Nearly ideal';
+      msg = g.key+' stays close to Z = 1 across this whole pressure range at '+T+' K. '+g.desc+' Small size and weak attractions mean both real-gas effects stay minor.';
+    } else {
+      tag='volume'; tagText='Volume effect dominates';
+      msg = 'At '+T+' K, '+g.key+' is warm enough that attraction has little time to act, so Z rises above 1 mainly because of the particles\' own volume as pressure increases.';
+    }
+    relBox.innerHTML = '<span class="tag '+tag+'">'+tagText+'</span><br>'+msg;
+  }
+  gasSelect.addEventListener('change', render);
+  tSlider.addEventListener('input', render);
+  render();
+})();
+
+/* ================= GUIDED LAB ================= */
+(function(){
+  const steps = [
+    { title:'Step 1 · Two different molecules, same conditions',
+      body:'At the same temperature and pressure, which gas would you expect to deviate MORE from ideal behavior: He or NH₃? Justify by thinking about interparticle forces.',
+      options:['He, because it is lighter','They deviate equally — all gases behave the same way','NH₃, because hydrogen bonding creates much stronger interparticle attraction than He\'s weak dispersion forces','Neither deviates; only liquids show interparticle forces'],
+      correct:2,
+      explain:'Correct: NH₃ molecules hydrogen-bond to each other, a strong interparticle attraction. He atoms have only very weak London dispersion forces. Stronger attraction pulls particles inward and slows their approach to the walls, so NH₃ deviates far more than He at the same conditions.'
+    },
+    { title:'Step 2 · Raising the pressure',
+      body:'A sample of CO₂ is compressed to very high pressure at constant, moderately warm temperature. As pressure keeps increasing, which real-gas effect eventually takes over as the dominant cause of deviation?',
+      options:['Particle volume, because the particles themselves take up a significant fraction of the shrinking container','Interparticle attraction, because particles are now closer together','Both effects disappear at high pressure','Temperature effects, because pressure and temperature are the same thing'],
+      correct:0,
+      explain:"Correct: at extremely high pressure, the container volume approaches the volume the particles themselves actually occupy. The ideal gas law assumes particles have zero volume, so it under-predicts the pressure needed — the particles' own volume, not attraction, becomes the dominant cause of deviation."
+    },
+    { title:'Step 3 · Cooling toward condensation',
+      body:'A gas is cooled at constant pressure until it is close to the temperature at which it will condense into a liquid. What happens to its deviation from the ideal gas law as it approaches this point?',
+      options:['Deviation shrinks to zero — cooling always makes gases behave more ideally','Deviation is unaffected by temperature, only by pressure','The gas law becomes exact right at the condensation point','Deviation grows dramatically — attractive forces increasingly overcome the particles\' kinetic energy'],
+      correct:3,
+      explain:"Correct: near condensation, interparticle attractions are strong enough — relative to the particles' now-slower kinetic energy — to pull the particles toward each other and eventually into a liquid. The ideal gas law assumes no such attraction, so deviation grows sharply as a gas approaches condensation."
+    },
+    { title:'Step 4 · Reading a Z-factor graph',
+      body:'On a graph of Z = PV/nRT vs. pressure, a real gas curve dips below Z = 1 at moderate pressure, then rises above Z = 1 at high pressure. What does the region where Z < 1 indicate?',
+      options:['The gas has more volume than the ideal law predicts','The measured pressure is LOWER than the ideal law predicts, because attraction is pulling particles inward','The gas has stopped obeying the ideal gas law entirely','The gas has become a solid'],
+      correct:1,
+      explain:'Correct: Z < 1 means PV < nRT, so the real, measured pressure is lower than an ideal gas at the same V, n, T would produce. This happens because interparticle attraction reduces the force of particle collisions with the container walls.'
+    },
+    { title:'Step 5 · Evaluate a claim',
+      body:'A classmate claims: "Real gases always exert LESS pressure than the ideal gas law predicts." Is this claim correct?',
+      options:['No — at high pressure, particle volume can make real pressure HIGHER than the ideal law predicts','Yes, always — attraction always lowers pressure','Yes, but only for polar gases','No — real gases always exert exactly the pressure the ideal law predicts'],
+      correct:0,
+      explain:"Correct — this claim is only sometimes true. At low-to-moderate pressure, attraction dominates and real pressure is lower than predicted (Z < 1). But at very high pressure, the particles' own volume dominates, leaving less free space than the ideal model assumes, and real pressure can exceed the ideal prediction (Z > 1)."
+    },
+    { title:'Step 6 · Ranking deviation',
+      body:'Rank these from LEAST to MOST expected deviation from ideal behavior at the same moderate conditions: He, CH₄, CO₂.',
+      options:['CO₂ < CH₄ < He','He < CO₂ < CH₄','He < CH₄ < CO₂','CH₄ < He < CO₂'],
+      correct:2,
+      explain:'Correct: He is smallest with the weakest dispersion forces (least deviation). CH₄ is a larger nonpolar molecule with somewhat stronger dispersion forces (more deviation). CO₂ is larger still, with the strongest dispersion forces of the three (most deviation). Size and interparticle attraction strength both increase deviation from ideal behavior.'
+    }
+  ];
+  let idx=0, answered=[], score=0;
+  const titleEl=document.getElementById('stepTitle'), bodyEl=document.getElementById('stepBody'), dotsEl=document.getElementById('stepDots');
+  const backBtn=document.getElementById('stepBack'), nextBtn=document.getElementById('stepNext'), scoreEl=document.getElementById('stepScore');
+
+  function renderDots(){
+    dotsEl.innerHTML='';
+    steps.forEach((s,i)=>{ const d=document.createElement('span'); if(answered[i]!==undefined) d.classList.add('done'); if(i===idx) d.classList.add('cur'); dotsEl.appendChild(d); });
+  }
+  function renderStep(){
+    const s=steps[idx];
+    titleEl.textContent=s.title;
+    bodyEl.innerHTML='<p style="font-size:14px;line-height:1.6;">'+s.body+'</p><div class="predict-opts" id="stepOpts"></div><div id="stepFeedback"></div>';
+    const optsEl=document.getElementById('stepOpts');
+    s.options.forEach((opt,i)=>{
+      const b=document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+      if(answered[idx]!==undefined){ b.disabled=true; if(i===s.correct) b.classList.add('correct'); else if(i===answered[idx]) b.classList.add('incorrect'); }
+      else b.addEventListener('click', ()=>selectAnswer(i));
+      optsEl.appendChild(b);
+    });
+    if(answered[idx]!==undefined){
+      const fb=document.createElement('div');
+      fb.className='feedback-box '+(answered[idx]===s.correct?'correct':'incorrect');
+      fb.innerHTML=(answered[idx]===s.correct?'<b>Correct.</b> ':'<b>Not quite.</b> ')+s.explain;
+      document.getElementById('stepFeedback').appendChild(fb);
+    }
+    backBtn.disabled = idx===0;
+    nextBtn.textContent = idx===steps.length-1 ? 'Finish' : 'Next →';
+    nextBtn.disabled = answered[idx]===undefined;
+    scoreEl.textContent='Score: '+score+' / '+steps.length;
+    renderDots();
+  }
+  function selectAnswer(i){
+    if(answered[idx]!==undefined) return;
+    answered[idx]=i; if(i===steps[idx].correct) score++;
+    renderStep();
+  }
+  backBtn.addEventListener('click', ()=>{ if(idx>0){idx--; renderStep();} });
+  nextBtn.addEventListener('click', ()=>{
+    if(idx<steps.length-1){ idx++; renderStep(); }
+    else {
+      bodyEl.innerHTML='<div class="score-summary"><div class="big">'+score+' / '+steps.length+'</div><p style="color:var(--muted);margin-top:6px;">Guided lab complete. Review any missed steps using the dots above, or head to the Quiz for a tiered assessment.</p></div>';
+      nextBtn.disabled=true;
+    }
+  });
+  renderStep();
+})();
+
+/* ================= QUIZ ================= */
+(function(){
+  const tiers = [
+    { id:'l1', name:'Level 1 · Foundational', desc:'Recall & recognize', questions:[
+      { q:'The ideal gas law assumes gas particles have which two properties?', opts:['Zero volume and no attraction to each other','Large volume and strong attraction to each other','Zero mass and infinite speed','Fixed positions and no motion'], correct:0,
+        explain:'The ideal gas model treats particles as point masses (zero volume) with no interparticle forces (no attraction) — these are the two simplifying assumptions that real gases violate.' },
+      { q:'Real gas deviations from the ideal gas law become most significant under which conditions?', opts:['Low pressure and high temperature','High pressure and/or low temperature (near condensation)','Any conditions — deviation is constant','Only at exactly 1 atm and 273 K'], correct:1,
+        explain:'At low pressure and high temperature, gas particles are far apart and moving fast — ideal behavior is a good approximation. Deviations grow at high pressure (particle volume matters) and low temperature near condensation (attraction matters).' },
+      { q:'Which best describes why interparticle attraction lowers a real gas\'s pressure below the ideal prediction?', opts:['Attraction speeds up particles, so they escape the container', 'Attraction pulls particles toward each other and away from the walls, softening wall collisions', 'Attraction increases the number of particles', 'Attraction has no effect on pressure, only on volume'], correct:1,
+        explain:'Interparticle attraction pulls particles toward their neighbors just before they would strike a wall, slightly reducing the force of that collision — so the measured pressure is a bit lower than the ideal law predicts.' },
+      { q:'Which pair of gases would you expect to behave MOST ideally at the same conditions?', opts:['NH₃ and CO₂','He and H₂','CO₂ and CH₄','NH₃ and CH₄'], correct:1,
+        explain:'He and H₂ are both very small with extremely weak London dispersion forces, so they show the least deviation from ideal behavior among common gases.' },
+      { q:'What does the compressibility factor Z = PV/nRT equal for a perfectly ideal gas at any pressure?', opts:['Z = 0','Z = 1','Z depends on the gas identity','Z increases linearly with pressure'], correct:1,
+        explain:'For an ideal gas, PV always equals nRT by definition, so Z = PV/nRT = 1 at every pressure — this is the flat reference line real gases deviate from.' }
+    ]},
+    { id:'l2', name:'Level 2 · Application', desc:'Interpret & compare', questions:[
+      { q:'A Z-vs-P graph for a gas dips below 1 at moderate pressure and then rises above 1 at very high pressure. What causes the RISE above Z = 1?', opts:['Interparticle attraction becoming stronger','The particles\' own volume becoming a significant fraction of the container volume','The temperature increasing automatically with pressure','A calculation error — Z cannot exceed 1'], correct:1,
+        explain:'At very high pressure the container shrinks toward the volume the particles themselves occupy. Since the ideal law assumes zero particle volume, it under-predicts pressure here, so Z = PV/nRT rises above 1.' },
+      { q:'At the same temperature and pressure, which would you expect to deviate more from ideal behavior: CH₄ or CO₂?', opts:['CH₄, because it is a hydrocarbon','CO₂, because it is a larger molecule with stronger dispersion forces','They are identical in behavior','Neither deviates — both are nonpolar'], correct:1,
+        explain:'CO₂ is a larger, more polarizable molecule than CH₄, giving it stronger London dispersion forces and therefore greater deviation from the ideal gas law at the same conditions.' },
+      { q:'A student cools a real gas sample at constant pressure. As it nears its condensation point, the ideal gas law\'s predictions become:', opts:['More accurate, since cooling always helps','Less accurate, since attraction increasingly dominates over particle motion','Unaffected, since the ideal law ignores temperature','Exactly correct, since condensation is an ideal process'], correct:1,
+        explain:'As a gas cools toward condensation, particles move more slowly and spend more time near each other, so attractive forces have an increasingly large effect — pulling the real behavior further from the ideal prediction.' },
+      { q:'Why does the ideal gas law tend to work well at low pressure, even for gases like NH₃ that deviate strongly at high pressure?', opts:['At low pressure the gas has no volume at all','At low pressure particles are far apart on average, so both attraction and particle volume become negligible','Low pressure gases are always at high temperature','NH₃ becomes nonpolar at low pressure'], correct:1,
+        explain:'At low pressure, particles are spread far apart — the container volume is enormous compared to the particles\' own volume, and they are too far apart, too much of the time, for attraction to matter much. Both real-gas effects shrink toward zero.' },
+      { q:'Two identical rigid containers hold the same moles of gas at the same temperature: one has He, the other NH₃. Which container\'s actual pressure is likely closer to what the ideal gas law predicts?', opts:['The He container', 'The NH₃ container', 'They will be equally close to the prediction', 'Cannot be determined without knowing the container volume'], correct:0,
+        explain:'He has much weaker interparticle attraction and smaller particle size than NH₃, so its real behavior stays closer to the ideal gas law\'s prediction under the same conditions.' }
+    ]},
+    { id:'l3', name:'Level 3 · Argumentation', desc:'Justify claims (AP skill 6.E)', questions:[
+      { q:'A student argues: "Since the ideal gas law has no term for molecule identity, all gases should deviate from it by exactly the same amount under the same conditions." Evaluate this argument.',
+        opts:['The argument is correct — deviation is identical for all gases','The argument is flawed — deviation depends on each gas\'s particle size and interparticle attraction strength, which differ by identity','The argument is correct only for noble gases','The argument is flawed because the ideal gas law does include molecule identity'], correct:1,
+        explain:'The ideal gas law itself ignores identity, which is exactly why it fails differently for different real gases: molecules with stronger attractions (like NH₃, with hydrogen bonding) or larger size (like CO₂) deviate more than small, weakly-interacting molecules (like He).' },
+      { q:'A sample of gas at very high pressure shows Z > 1. A student claims this proves "the ideal gas law is completely wrong and useless here." Which is the better-supported evaluation?',
+        opts:['The student is correct — the ideal gas law should be discarded entirely at high pressure','The ideal gas law remains a useful reference point — Z > 1 quantifies how far real behavior departs from it, rather than showing it is meaningless','Z > 1 means the ideal gas law is more accurate than usual','Z can never exceed 1, so the data must be an error'], correct:1,
+        explain:'A deviation (Z ≠ 1) shows the ideal gas law is an approximation, not that it is useless — it remains the baseline against which real, more complex behavior is measured and explained.' },
+      { q:'Justify, using particulate-level reasoning: why does NH₃ deviate more from ideal behavior than N₂ at the same moderate pressure and temperature?',
+        opts:['NH₃ has a higher molar mass, which always increases deviation','NH₃ molecules hydrogen-bond to each other, creating stronger interparticle attraction than the weak dispersion forces between nonpolar N₂ molecules','N₂ molecules are charged, while NH₃ molecules are neutral','NH₃ has fewer atoms per molecule, reducing its dispersion forces'], correct:1,
+        explain:'The particulate-level cause is intermolecular force strength: NH₃\'s N–H bonds create hydrogen bonding, a strong dipole-based attraction, while N₂ (nonpolar) only has weak London dispersion forces. Stronger attraction means NH₃ particles pull on each other more, producing greater deviation.' },
+      { q:'A student says: "Real gases only deviate from the ideal gas law because of interparticle attraction." Is this a complete argument?',
+        opts:['Yes, attraction is the only cause','No — particle volume is a second, independent cause, dominant at very high pressure','No — temperature is the only real cause, not attraction','Yes, but only for polar molecules'], correct:1,
+        explain:'The claim is incomplete. The CED identifies two distinct causes: interparticle attraction (dominant near condensation / low T) AND the particles\' own nonzero volume (dominant at very high pressure). A complete argument must address both.' },
+      { q:'Which piece of evidence would best support the claim "particle volume, not attraction, is causing this particular gas sample to deviate from ideal behavior"?',
+        opts:['The gas is at very low pressure and high temperature','Z is greater than 1 and the sample is under extremely high pressure','The gas is a polar molecule with strong dipole moments','The temperature is near the gas\'s condensation point'], correct:1,
+        explain:'Z > 1 at extremely high pressure is the signature of the particle-volume effect: the ideal law under-predicts pressure because it assumes particles take up no space, and that assumption fails hardest when the container is nearly as small as the particles themselves.' }
+    ]}
+  ];
+
+  const tierRow=document.getElementById('tierRow'), tierSelectWrap=document.getElementById('quizTierSelect'), quizArea=document.getElementById('quizArea');
+  tiers.forEach(t=>{
+    const b=document.createElement('div'); b.className='tier-btn';
+    b.innerHTML='<div class="t-name">'+t.name+'</div><div class="t-desc">'+t.desc+' · '+t.questions.length+' questions</div>';
+    b.addEventListener('click', ()=>startTier(t));
+    tierRow.appendChild(b);
+  });
+  function startTier(tier){
+    tierSelectWrap.style.display='none'; quizArea.style.display='';
+    let qi=0, score=0, chosen=undefined;
+    function renderQ(){
+      const q=tier.questions[qi];
+      let html='<div class="qcounter">'+tier.name+' — Question '+(qi+1)+' of '+tier.questions.length+' &nbsp;|&nbsp; Score: '+score+'</div>';
+      html+='<div class="qtext">'+q.q+'</div><div class="predict-opts" id="quizOpts"></div><div id="quizFeedback"></div>';
+      html+='<div class="step-nav" style="margin-top:14px;"><button class="navbtn" id="quizExit">← Choose tier</button><button class="navbtn primary" id="quizNext" disabled>'+(qi===tier.questions.length-1?'Finish':'Next →')+'</button></div>';
+      quizArea.innerHTML=html;
+      const optsEl=document.getElementById('quizOpts');
+      q.opts.forEach((opt,i)=>{
+        const b=document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+        b.addEventListener('click', ()=>{
+          if(chosen!==undefined) return;
+          chosen=i; if(i===q.correct) score++;
+          Array.from(optsEl.children).forEach((c,ci)=>{ c.disabled=true; if(ci===q.correct) c.classList.add('correct'); else if(ci===i) c.classList.add('incorrect'); });
+          const fb=document.createElement('div'); fb.className='feedback-box '+(i===q.correct?'correct':'incorrect');
+          fb.innerHTML=(i===q.correct?'<b>Correct.</b> ':'<b>Not quite.</b> ')+q.explain;
+          document.getElementById('quizFeedback').appendChild(fb);
+          document.getElementById('quizNext').disabled=false;
+          document.getElementById('quizNext').addEventListener('click', ()=>{
+            if(qi<tier.questions.length-1){ qi++; chosen=undefined; renderQ(); } else finish();
+          }, {once:true});
+        });
+        optsEl.appendChild(b);
+      });
+      document.getElementById('quizExit').addEventListener('click', ()=>{ tierSelectWrap.style.display=''; quizArea.style.display='none'; });
+    }
+    function finish(){
+      const pct=Math.round(score/tier.questions.length*100);
+      quizArea.innerHTML='<div class="score-summary"><div class="big">'+score+' / '+tier.questions.length+'</div>'+
+        '<p style="color:var(--muted);margin-top:6px;">'+pct+'% correct on '+tier.name+'</p>'+
+        '<div class="step-nav" style="justify-content:center;gap:12px;margin-top:18px;"><button class="navbtn" id="quizBack1">← Choose a different tier</button><button class="navbtn primary" id="quizRetry">Retry this tier</button></div></div>';
+      document.getElementById('quizBack1').addEventListener('click', ()=>{ tierSelectWrap.style.display=''; quizArea.style.display='none'; });
+      document.getElementById('quizRetry').addEventListener('click', ()=>startTier(tier));
+    }
+    renderQ();
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
